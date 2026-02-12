@@ -7,7 +7,7 @@ use rmcp::{
     schemars, tool, tool_handler, tool_router,
 };
 
-use crate::dps::{self, Countdown, Mode};
+use crate::meaco::{self, Countdown, Mode};
 use crate::tuya_connection::{self, TuyaConnection};
 
 // -- Tool parameter structs --
@@ -45,13 +45,13 @@ pub struct SetCountdownParams {
 // -- MCP Server --
 
 #[derive(Debug, Clone)]
-pub struct MeacoServer {
+pub struct HearthServer {
     conn: Arc<TuyaConnection>,
     tool_router: ToolRouter<Self>,
 }
 
 #[tool_router]
-impl MeacoServer {
+impl HearthServer {
     pub fn new(conn: Arc<TuyaConnection>) -> Self {
         Self {
             conn,
@@ -69,9 +69,9 @@ impl MeacoServer {
             .get("dps")
             .unwrap_or(&response);
 
-        match dps::parse_status(dps_data) {
+        match meaco::parse_status(dps_data) {
             Ok(status) => Ok(CallToolResult::success(vec![Content::text(
-                dps::format_status(&status),
+                meaco::format_status(&status),
             )])),
             Err(_) => Ok(CallToolResult::success(vec![Content::text(
                 format!("Raw DPS: {response}"),
@@ -84,7 +84,7 @@ impl MeacoServer {
         &self,
         Parameters(PowerParams { on }): Parameters<PowerParams>,
     ) -> Result<CallToolResult, McpError> {
-        let dps_val = dps::build_power_dps(on);
+        let dps_val = meaco::build_power_dps(on);
         tuya_connection::set_dps(&self.conn, dps_val)
             .await
             .map_err(|e| McpError::internal_error(format!("Failed to set power: {e}"), None))?;
@@ -100,7 +100,7 @@ impl MeacoServer {
         &self,
         Parameters(SetHumidityParams { humidity }): Parameters<SetHumidityParams>,
     ) -> Result<CallToolResult, McpError> {
-        let dps_val = dps::build_target_humidity_dps(humidity)
+        let dps_val = meaco::build_target_humidity_dps(humidity)
             .map_err(|e| McpError::invalid_params(format!("{e}"), None))?;
 
         tuya_connection::set_dps(&self.conn, dps_val)
@@ -117,7 +117,7 @@ impl MeacoServer {
         &self,
         Parameters(SetModeParams { mode }): Parameters<SetModeParams>,
     ) -> Result<CallToolResult, McpError> {
-        let dps_val = dps::build_mode_dps(&mode);
+        let dps_val = meaco::build_mode_dps(&mode);
         tuya_connection::set_dps(&self.conn, dps_val)
             .await
             .map_err(|e| McpError::internal_error(format!("Failed to set mode: {e}"), None))?;
@@ -132,7 +132,7 @@ impl MeacoServer {
         &self,
         Parameters(SetChildLockParams { locked }): Parameters<SetChildLockParams>,
     ) -> Result<CallToolResult, McpError> {
-        let dps_val = dps::build_child_lock_dps(locked);
+        let dps_val = meaco::build_child_lock_dps(locked);
         tuya_connection::set_dps(&self.conn, dps_val)
             .await
             .map_err(|e| McpError::internal_error(format!("Failed to set child lock: {e}"), None))?;
@@ -148,7 +148,7 @@ impl MeacoServer {
         &self,
         Parameters(SetCountdownParams { countdown }): Parameters<SetCountdownParams>,
     ) -> Result<CallToolResult, McpError> {
-        let dps_val = dps::build_countdown_dps(&countdown);
+        let dps_val = meaco::build_countdown_dps(&countdown);
         tuya_connection::set_dps(&self.conn, dps_val)
             .await
             .map_err(|e| McpError::internal_error(format!("Failed to set countdown: {e}"), None))?;
@@ -160,11 +160,12 @@ impl MeacoServer {
 }
 
 #[tool_handler]
-impl ServerHandler for MeacoServer {
+impl ServerHandler for HearthServer {
     fn get_info(&self) -> ServerInfo {
         ServerInfo {
             instructions: Some(
-                "Controls a Meaco Arete Two 25L dehumidifier over the local network via Tuya protocol v3.3. \
+                "Hearth — sovereign home system. \
+                 Controls: Meaco Arete Two 25L dehumidifier via Tuya protocol v3.3. \
                  Available tools: get_status, power, set_humidity, set_mode, set_child_lock, set_countdown."
                     .into(),
             ),

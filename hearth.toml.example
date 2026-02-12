@@ -1,0 +1,4 @@
+[meaco]
+device_ip = "192.168.1.xxx"
+device_id = "your_device_id_here"
+local_key = "your_16char_key!"  # Extract via TinyTuya wizard

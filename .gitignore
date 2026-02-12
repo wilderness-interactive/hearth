@@ -1,7 +1,9 @@
 /target
+hearth.toml
 meaco.toml
 devices.json
 snapshot.json
 tinytuya.json
 tuya-raw.json
 .claude/
+.mcp.json

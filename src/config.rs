@@ -3,6 +3,11 @@ use std::fmt;
 
 #[derive(Deserialize)]
 pub struct Config {
+    pub meaco: MeacoConfig,
+}
+
+#[derive(Deserialize)]
+pub struct MeacoConfig {
     pub device_ip: String,
     pub device_id: String,
     pub local_key: String,
@@ -34,7 +39,7 @@ pub fn load_config(path: &str) -> Result<Config, ConfigError> {
     let config: Config = toml::from_str(&contents)
         .map_err(|e| ConfigError::ParseError(e.to_string()))?;
 
-    if config.local_key.len() != 16 {
+    if config.meaco.local_key.len() != 16 {
         return Err(ConfigError::InvalidLocalKey);
     }
 

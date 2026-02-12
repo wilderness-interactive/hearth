@@ -4,7 +4,7 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
 use tokio::sync::Mutex;
 
-use crate::config::Config;
+use crate::config::MeacoConfig;
 use crate::tuya_protocol::{
     self, TuyaFrame, TuyaMessage, ProtocolError,
     HEADER_SIZE, PREFIX,
@@ -62,14 +62,14 @@ fn next_seqno(conn: &TuyaConnection) -> u32 {
     conn.seqno.fetch_add(1, Ordering::Relaxed)
 }
 
-fn local_key_from_config(config: &Config) -> [u8; 16] {
+fn local_key_from_config(config: &MeacoConfig) -> [u8; 16] {
     let mut key = [0u8; 16];
     key.copy_from_slice(config.local_key.as_bytes());
     key
 }
 
 /// Connect to the Tuya device over TCP port 6668.
-pub async fn connect(config: &Config) -> Result<Arc<TuyaConnection>, ConnectionError> {
+pub async fn connect(config: &MeacoConfig) -> Result<Arc<TuyaConnection>, ConnectionError> {
     let addr = format!("{}:6668", config.device_ip);
 
     let stream = tokio::time::timeout(
